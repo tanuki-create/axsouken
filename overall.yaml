@@ -1,0 +1,421 @@
+# AI トランスフォーメーション情報サイト 設計書
+
+site_overview:
+  purpose: AI トランスフォーメーションに関する情報を提供し、SEO最適化されたコンテンツプラットフォームを構築
+  tech_stack:
+    framework: Next.js (App Router)
+    language: TypeScript
+    styling: Tailwind CSS
+    orm: Prisma
+    database: PostgreSQL
+  deployment: Vercel
+
+site_structure:
+  routes:
+    - path: /
+      description: ホームページ
+    - path: /articles
+      description: 記事一覧
+    - path: /articles/[slug]
+      description: 記事詳細
+    - path: /categories
+      description: カテゴリ一覧
+    - path: /categories/[slug]
+      description: カテゴリ別記事一覧
+    - path: /tags/[slug]
+      description: タグ別記事一覧
+    - path: /search
+      description: 検索結果
+    - path: /about
+      description: サイト概要
+    - path: /admin
+      description: 管理ページ (認証必須)
+    - path: /contact
+      description: 問い合わせフォーム
+    - path: /admin/contacts
+      description: 問い合わせ管理画面（認証必須）
+
+seo_optimization:
+  strategies:
+    - strategy: 静的生成 (SSG)
+      description: 全記事・カテゴリページを静的生成
+    - strategy: 動的メタデータ
+      description: 各ページに最適化されたタイトル、説明、OGP
+    - strategy: 構造化データ
+      description: Schema.org マークアップ実装
+    - strategy: サイトマップ.xml
+      description: 自動生成
+    - strategy: robots.txt
+      description: 適切に設定
+    - strategy: パフォーマンス
+      description: Core Web Vitals 最適化
+    - strategy: URL構造
+      description: SEOフレンドリーなスラッグ管理
+    - strategy: 内部リンク
+      description: 関連記事、カテゴリ間の適切なリンク設計
+
+database_design:
+  models:
+    Article:
+      fields:
+        - name: id
+          type: Int
+          attributes: [id, default(autoincrement())]
+        - name: title
+          type: String
+        - name: slug
+          type: String
+          attributes: [unique]
+        - name: content
+          type: String
+          attributes: [db.Text]
+        - name: excerpt
+          type: String
+          attributes: [db.Text, optional]
+        - name: publishedAt
+          type: DateTime
+          attributes: [optional]
+        - name: updatedAt
+          type: DateTime
+          attributes: [updatedAt]
+        - name: viewCount
+          type: Int
+          attributes: [default(0)]
+        - name: published
+          type: Boolean
+          attributes: [default(false)]
+        - name: featuredImage
+          type: String
+          attributes: [optional]
+        - name: authorId
+          type: Int
+          relation: User
+        - name: categories
+          type: Category[]
+        - name: tags
+          type: Tag[]
+        - name: seo
+          type: SEO
+          attributes: [optional]
+          
+    Category:
+      fields:
+        - name: id
+          type: Int
+          attributes: [id, default(autoincrement())]
+        - name: name
+          type: String
+        - name: slug
+          type: String
+          attributes: [unique]
+        - name: description
+          type: String
+          attributes: [optional]
+        - name: articles
+          type: Article[]
+        - name: seo
+          type: SEO
+          attributes: [optional]
+          
+    Tag:
+      fields:
+        - name: id
+          type: Int
+          attributes: [id, default(autoincrement())]
+        - name: name
+          type: String
+        - name: slug
+          type: String
+          attributes: [unique]
+        - name: articles
+          type: Article[]
+          
+    User:
+      fields:
+        - name: id
+          type: Int
+          attributes: [id, default(autoincrement())]
+        - name: name
+          type: String
+        - name: email
+          type: String
+          attributes: [unique]
+        - name: password
+          type: String
+        - name: role
+          type: UserRole
+          attributes: [default(EDITOR)]
+        - name: articles
+          type: Article[]
+          
+    SEO:
+      fields:
+        - name: id
+          type: Int
+          attributes: [id, default(autoincrement())]
+        - name: title
+          type: String
+          attributes: [optional]
+        - name: description
+          type: String
+          attributes: [db.Text, optional]
+        - name: keywords
+          type: String
+          attributes: [optional]
+        - name: canonicalUrl
+          type: String
+          attributes: [optional]
+        - name: ogImage
+          type: String
+          attributes: [optional]
+        - name: articleId
+          type: Int
+          attributes: [unique, optional]
+        - name: article
+          type: Article
+          attributes: [optional]
+        - name: categoryId
+          type: Int
+          attributes: [unique, optional]
+        - name: category
+          type: Category
+          attributes: [optional]
+    
+    ContactSubmission:
+      fields:
+        - name: id
+          type: Int
+          attributes: [id, default(autoincrement())]
+        - name: name
+          type: String
+        - name: email
+          type: String
+        - name: company
+          type: String
+          attributes: [optional]
+        - name: subject
+          type: String
+        - name: message
+          type: String
+          attributes: [db.Text]
+        - name: submittedAt
+          type: DateTime
+          attributes: [default(now())]
+        - name: ipAddress
+          type: String
+        - name: status
+          type: ContactStatus
+          attributes: [default(NEW)]
+  
+  enums:
+    UserRole:
+      - ADMIN
+      - EDITOR
+      - AUTHOR
+    ContactStatus:
+      - NEW
+      - IN_PROGRESS
+      - COMPLETED
+
+frontend_design:
+  component_structure:
+    layout:
+      - Header.tsx
+      - Footer.tsx
+      - Sidebar.tsx
+      - Layout.tsx
+    ui:
+      - Button.tsx
+      - Card.tsx
+      - Input.tsx
+    articles:
+      - ArticleCard.tsx
+      - ArticleGrid.tsx
+      - ArticleHeader.tsx
+      - RelatedArticles.tsx
+      - TableOfContents.tsx
+    seo:
+      - MetaTags.tsx
+      - SchemaMarkup.tsx
+    admin:
+      - ArticleForm.tsx
+      - CategoryForm.tsx
+      - TagManager.tsx
+  
+  ux_ui_design_points:
+    - point: アクセシビリティ
+      description: WAI-ARIA準拠、キーボード操作対応
+    - point: レスポンシブデザイン
+      description: モバイルファースト設計
+    - point: パフォーマンス
+      description: 画像最適化、コンポーネント遅延ロード
+    - point: ダークモード
+      description: システム設定連動 + 手動切替
+    - point: 読みやすさ
+      description: 適切な行間、フォントサイズ、コントラスト
+    - point: ナビゲーション
+      description: パンくずリスト、目次、関連記事
+
+api_design:
+  endpoints:
+    - /api/articles: 記事CRUD
+    - /api/categories: カテゴリCRUD
+    - /api/tags: タグCRUD
+    - /api/search: 検索API
+    - /api/auth: 認証API
+    - /api/contact: 問い合わせフォーム送信
+    - /api/admin/contacts: 問い合わせ管理
+
+admin_features:
+  - feature: ダッシュボード
+    description: アクセス統計、記事状況一覧
+  - feature: 記事管理
+    description: 作成、編集、削除、下書き保存
+  - feature: リッチエディタ
+    description: Markdown+WYSIWYG
+  - feature: メディアライブラリ
+    description: 画像のアップロード・管理
+  - feature: カテゴリ/タグ管理
+    description: 作成、編集、削除
+  - feature: SEO設定
+    description: 記事/カテゴリごとのSEOメタデータ設定
+  - feature: ユーザー管理
+    description: 管理者のみ
+
+nextjs_optimizations:
+  - optimization: App Router
+    description: 最新のNext.js機能を活用
+  - optimization: Server Components
+    description: パフォーマンス最適化
+  - optimization: Image Optimization
+    description: next/image で画像最適化
+  - optimization: Font Optimization
+    description: next/font で Web フォント最適化
+  - optimization: Incremental Static Regeneration
+    description: 定期的なコンテンツ更新
+  - optimization: API Routes
+    description: サーバーサイド処理の実装
+
+implementation_phases:
+  - phase: 1
+    description: プロジェクト初期設定・環境構築
+  - phase: 2
+    description: データベース構築・Prisma設定
+  - phase: 3
+    description: 認証システム実装
+  - phase: 4
+    description: 管理画面実装
+  - phase: 5
+    description: フロントエンド共通コンポーネント
+  - phase: 6
+    description: 記事表示ページ実装
+  - phase: 7
+    description: SEO対策実装
+  - phase: 8
+    description: パフォーマンス最適化
+  - phase: 9
+    description: テスト・品質保証
+  - phase: 10
+    description: デプロイ
+  - phase: 11
+    description: 問い合わせフォーム実装
+  - phase: 12
+    description: 問い合わせ管理機能実装
+
+seo_strategies_detail:
+  - strategy: ページ表示速度
+    description: Core Web Vitalsの最適化
+  - strategy: モバイル対応
+    description: レスポンシブデザインの徹底
+  - strategy: コンテンツ品質
+    description: 専門性・権威性・信頼性のある記事作成
+  - strategy: 内部リンク構造
+    description: 記事間の関連付け最適化
+  - strategy: ヘッダー設計
+    description: h1-h6の適切な階層構造
+  - strategy: 画像最適化
+    description: alt属性、サイズ最適化
+  - strategy: 内部検索
+    description: 検索機能の強化
+  - strategy: ローディング
+    description: スケルトンUIでユーザビリティ向上
+
+authentication_strategy:
+  method: NextAuth.js
+  providers:
+    - credentials
+    - google
+  sessions:
+    strategy: JWT
+    expiry: 7d
+  permissions:
+    roles:
+      - admin: フル権限
+      - editor: 記事の編集・公開権限
+      - author: 記事の作成・下書き権限
+
+content_workflow:
+  stages:
+    - draft: 下書き状態
+    - review: レビュー待ち
+    - scheduled: 公開予定
+    - published: 公開済み
+  notifications:
+    - 記事レビュー依頼
+    - 公開承認通知
+    - 公開完了通知
+
+analytics:
+  tools:
+    - Google Analytics 4
+    - Search Console
+  custom_tracking:
+    - 記事閲覧数
+    - 滞在時間
+    - CTR分析
+    - コンバージョン追跡
+
+security:
+  measures:
+    - CSRF保護
+    - XSS対策
+    - レート制限
+    - 入力サニタイズ
+    - CSPヘッダー
+
+testing_strategy:
+  unit_tests: Vitest
+  integration_tests: Cypress
+  e2e_tests: Playwright
+  seo_tests: Lighthouse CI
+
+deployment:
+  ci_cd: GitHub Actions
+  environments:
+    - development
+    - staging
+    - production
+  monitoring: Vercel Analytics
+
+error_handling:
+  logging: Sentry
+  fallbacks: エラー境界コンポーネント
+  status_pages: カスタム404/500ページ
+
+performance_budgets:
+  metrics:
+    fcp: < 1.8s
+    lcp: < 2.5s
+    fid: < 100ms
+    cls: < 0.1
+    ttfb: < 800ms
+  asset_limits:
+    js: 150KB (初期読み込み)
+    css: 50KB
+    images: WebP/AVIF形式必須
+
+maintenance_plan:
+  content_audit: 四半期ごと
+  dependency_updates: 月次
+  performance_review: 月次
+  seo_review: 月次

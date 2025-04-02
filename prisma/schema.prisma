@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// モデル定義
+model Article {
+  id            Int       @id @default(autoincrement())
+  title         String
+  slug          String    @unique
+  content       String
+  excerpt       String?
+  publishedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+  viewCount     Int       @default(0)
+  published     Boolean   @default(false)
+  featuredImage String?
+  author        User      @relation(fields: [authorId], references: [id])
+  authorId      Int
+  categories    Category[]
+  tags          Tag[]
+  seo           SEO?
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  description String?
+  articles    Article[]
+  seo         SEO?
+}
+
+model Tag {
+  id       Int       @id @default(autoincrement())
+  name     String
+  slug     String    @unique
+  articles Article[]
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  name     String
+  email    String    @unique
+  password String
+  role     UserRole  @default(EDITOR)
+  articles Article[]
+}
+
+model SEO {
+  id           Int       @id @default(autoincrement())
+  title        String?
+  description  String?
+  keywords     String?
+  canonicalUrl String?
+  ogImage      String?
+  articleId    Int?      @unique
+  article      Article?  @relation(fields: [articleId], references: [id])
+  categoryId   Int?      @unique
+  category     Category? @relation(fields: [categoryId], references: [id])
+}
+
+model ContactSubmission {
+  id          Int           @id @default(autoincrement())
+  name        String
+  email       String
+  company     String?
+  subject     String
+  message     String
+  submittedAt DateTime      @default(now())
+  ipAddress   String
+  status      ContactStatus @default(NEW)
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  AUTHOR
+}
+
+enum ContactStatus {
+  NEW
+  IN_PROGRESS
+  COMPLETED
+}
